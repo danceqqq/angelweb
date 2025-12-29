@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angel Web</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Страница 1: Лента постов -->
+        <div class="page active" id="feed-page">
+            <div class="feed-container">
+                <header class="feed-header">
+                    <h1>Лента</h1>
+                </header>
+                
+                <div class="posts-feed" id="posts-feed">
+                    <!-- Посты будут добавлены через JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница 2: MyLinks -->
+        <div class="page" id="links-page">
+            <div class="links-container">
+                <header class="links-header">
+                    <h1>MyLinks</h1>
+                </header>
+                
+                <div class="links-grid" id="links-grid">
+                    <!-- Ссылки будут добавлены через JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Индикатор страниц -->
+        <div class="page-indicator">
+            <span class="indicator-dot active" data-page="0"></span>
+            <span class="indicator-dot" data-page="1"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
