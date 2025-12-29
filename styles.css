@@ -15,12 +15,19 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
     overflow-x: hidden;
+    overflow-y: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -45,6 +52,7 @@ body {
     pointer-events: none;
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .page.active {
@@ -62,9 +70,8 @@ body {
     max-width: 600px;
     margin: 0 auto;
     padding: 2rem 1rem;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
+    padding-bottom: 6rem;
+    min-height: 100vh;
 }
 
 .feed-header {
@@ -194,9 +201,8 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem 1rem;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
+    padding-bottom: 6rem;
+    min-height: 100vh;
 }
 
 .links-header {

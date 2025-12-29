@@ -1,5 +1,23 @@
 // GitHub аватарка
-const GITHUB_AVATAR = "https://github.com/danceqqq.png";
+const GITHUB_USERNAME = "danceqqq";
+// Используем GitHub API для получения правильного URL аватара
+const GITHUB_AVATAR = `https://api.github.com/users/${GITHUB_USERNAME}`;
+
+// Функция для получения аватара с GitHub через API
+async function getGitHubAvatar() {
+    try {
+        const response = await fetch(GITHUB_AVATAR);
+        if (response.ok) {
+            const data = await response.json();
+            // Возвращаем avatar_url из API ответа
+            return data.avatar_url || `https://github.com/${GITHUB_USERNAME}.png`;
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки аватара:', error);
+    }
+    // Fallback на стандартный формат GitHub аватара
+    return `https://github.com/${GITHUB_USERNAME}.png`;
+}
 
 // Функция для Discord-стиля timestamp (относительное время)
 function getDiscordTimestamp(timestamp) {
@@ -67,11 +85,12 @@ function isYouTubeShortsUrl(url) {
 
 // Данные постов (можно заменить на загрузку с API)
 // Используйте timestamp в миллисекундах для даты
+// Аватар будет загружен автоматически через API
 const postsData = [
     {
         id: 1,
         author: "Angel",
-        avatar: GITHUB_AVATAR,
+        avatar: null, // Будет заменено на загруженный аватар
         timestamp: Date.now() - 2 * 60 * 60 * 1000, // 2 часа назад
         content: "Привет! Это мой первый пост в ленте. Здесь можно делиться мыслями, видео и фотографиями.",
         media: {
@@ -82,7 +101,7 @@ const postsData = [
     {
         id: 2,
         author: "Angel",
-        avatar: GITHUB_AVATAR,
+        avatar: null,
         timestamp: Date.now() - 5 * 60 * 60 * 1000, // 5 часов назад
         content: "Поддержка видео в стиле YouTube Shorts! 🎬",
         media: {
@@ -93,14 +112,14 @@ const postsData = [
     {
         id: 3,
         author: "Angel",
-        avatar: GITHUB_AVATAR,
+        avatar: null,
         timestamp: Date.now() - 24 * 60 * 60 * 1000, // 1 день назад
         content: "Минималистичный дизайн в духе Vastlyra. Простота и элегантность."
     },
     {
         id: 4,
         author: "Angel",
-        avatar: GITHUB_AVATAR,
+        avatar: null,
         timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 дня назад
         content: "Обычное YouTube видео (горизонтальное)",
         media: {
@@ -278,12 +297,24 @@ indicators.forEach((indicator, index) => {
 async function renderPosts() {
     const feed = document.getElementById('posts-feed');
     
+    // Загружаем аватар с GitHub API
+    let avatarUrl = GITHUB_AVATAR;
+    try {
+        const avatar = await getGitHubAvatar();
+        avatarUrl = avatar;
+    } catch (error) {
+        console.warn('Не удалось загрузить аватар через API, используем fallback');
+    }
+    
     for (const post of postsData) {
         const postElement = document.createElement('div');
         postElement.className = 'post';
         
         // Форматируем дату в Discord стиле
         const dateText = getDiscordTimestamp(post.timestamp);
+        
+        // Используем загруженный аватар или fallback
+        const postAvatar = post.avatar || avatarUrl;
         
         let mediaHTML = '';
         if (post.media) {
@@ -323,7 +354,7 @@ async function renderPosts() {
         
         postElement.innerHTML = `
             <div class="post-header">
-                <img src="${post.avatar}" alt="${post.author}" class="post-avatar" onerror="this.src='https://via.placeholder.com/48'">
+                <img src="${postAvatar}" alt="${post.author}" class="post-avatar" onerror="this.onerror=null; this.src='https://via.placeholder.com/48?text=${post.author.charAt(0)}'">
                 <div>
                     <div class="post-author">${post.author}</div>
                     <div class="post-date">${dateText}</div>
