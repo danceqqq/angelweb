@@ -1,10 +1,78 @@
+// GitHub аватарка
+const GITHUB_AVATAR = "https://github.com/danceqqq.png";
+
+// Функция для Discord-стиля timestamp (относительное время)
+function getDiscordTimestamp(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (seconds < 60) return "только что";
+    if (minutes < 60) return `${minutes} ${getTimeWord(minutes, 'минуту', 'минуты', 'минут')} назад`;
+    if (hours < 24) return `${hours} ${getTimeWord(hours, 'час', 'часа', 'часов')} назад`;
+    if (days < 7) return `${days} ${getTimeWord(days, 'день', 'дня', 'дней')} назад`;
+    if (weeks < 4) return `${weeks} ${getTimeWord(weeks, 'неделю', 'недели', 'недель')} назад`;
+    if (months < 12) return `${months} ${getTimeWord(months, 'месяц', 'месяца', 'месяцев')} назад`;
+    return `${years} ${getTimeWord(years, 'год', 'года', 'лет')} назад`;
+}
+
+function getTimeWord(num, one, few, many) {
+    const mod10 = num % 10;
+    const mod100 = num % 100;
+    
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+    return many;
+}
+
+// Функция для извлечения YouTube video ID
+function getYouTubeVideoId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+// Функция для определения формата YouTube видео (Shorts или обычное)
+async function isYouTubeShort(videoId) {
+    try {
+        // Используем YouTube oEmbed API для получения информации о видео
+        const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+        if (!response.ok) return false;
+        
+        const data = await response.json();
+        // YouTube Shorts обычно имеют соотношение сторон близкое к 9:16
+        // Проверяем по ширине и высоте из oEmbed
+        const width = data.width || 0;
+        const height = data.height || 0;
+        const aspectRatio = width / height;
+        
+        // Shorts обычно имеют соотношение около 0.5625 (9/16)
+        return aspectRatio < 0.7;
+    } catch (error) {
+        // Если не удалось определить, предполагаем что это Short если в URL есть /shorts/
+        return false;
+    }
+}
+
+// Проверка является ли URL YouTube Shorts по URL
+function isYouTubeShortsUrl(url) {
+    return url.includes('/shorts/') || url.includes('youtube.com/shorts/');
+}
+
 // Данные постов (можно заменить на загрузку с API)
+// Используйте timestamp в миллисекундах для даты
 const postsData = [
     {
         id: 1,
         author: "Angel",
-        avatar: "https://via.placeholder.com/48",
-        date: "2 часа назад",
+        avatar: GITHUB_AVATAR,
+        timestamp: Date.now() - 2 * 60 * 60 * 1000, // 2 часа назад
         content: "Привет! Это мой первый пост в ленте. Здесь можно делиться мыслями, видео и фотографиями.",
         media: {
             type: "image",
@@ -14,20 +82,31 @@ const postsData = [
     {
         id: 2,
         author: "Angel",
-        avatar: "https://via.placeholder.com/48",
-        date: "5 часов назад",
+        avatar: GITHUB_AVATAR,
+        timestamp: Date.now() - 5 * 60 * 60 * 1000, // 5 часов назад
         content: "Поддержка видео в стиле YouTube Shorts! 🎬",
         media: {
-            type: "video",
-            url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+            type: "youtube",
+            url: "https://www.youtube.com/shorts/2LldM4Fwtas"
         }
     },
     {
         id: 3,
         author: "Angel",
-        avatar: "https://via.placeholder.com/48",
-        date: "1 день назад",
+        avatar: GITHUB_AVATAR,
+        timestamp: Date.now() - 24 * 60 * 60 * 1000, // 1 день назад
         content: "Минималистичный дизайн в духе Vastlyra. Простота и элегантность."
+    },
+    {
+        id: 4,
+        author: "Angel",
+        avatar: GITHUB_AVATAR,
+        timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 дня назад
+        content: "Обычное YouTube видео (горизонтальное)",
+        media: {
+            type: "youtube",
+            url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }
     }
 ];
 
@@ -128,24 +207,63 @@ function handleSwipe() {
     if (Math.abs(diff) > swipeThreshold) {
         if (diff > 0 && currentPage < pages.length - 1) {
             // Свайп влево - следующая страница
-            switchPage(currentPage + 1);
+            createSwipeIndicator('left');
+            setTimeout(() => switchPage(currentPage + 1), 100);
         } else if (diff < 0 && currentPage > 0) {
             // Свайп вправо - предыдущая страница
-            switchPage(currentPage - 1);
+            createSwipeIndicator('right');
+            setTimeout(() => switchPage(currentPage - 1), 100);
         }
     }
 }
 
-// Клик на правую часть экрана для переключения
+// Визуальные индикаторы для свайпа
+let swipeIndicator = null;
+
+function createSwipeIndicator(direction) {
+    if (swipeIndicator) {
+        swipeIndicator.remove();
+    }
+    
+    swipeIndicator = document.createElement('div');
+    swipeIndicator.className = `swipe-indicator swipe-${direction}`;
+    document.body.appendChild(swipeIndicator);
+    
+    setTimeout(() => {
+        swipeIndicator.classList.add('active');
+    }, 10);
+    
+    setTimeout(() => {
+        swipeIndicator.classList.remove('active');
+        setTimeout(() => {
+            if (swipeIndicator) {
+                swipeIndicator.remove();
+                swipeIndicator = null;
+            }
+        }, 300);
+    }, 500);
+}
+
+// Клик на правую/левую часть экрана для переключения
 document.addEventListener('click', (e) => {
+    // Игнорируем клики на интерактивные элементы
+    if (e.target.closest('a, button, video, iframe, .link-card')) {
+        return;
+    }
+    
     const windowWidth = window.innerWidth;
     const clickX = e.clientX;
+    const edgeThreshold = windowWidth * 0.1; // 10% от края
     
-    // Если клик в правой трети экрана
-    if (clickX > windowWidth * 0.67 && currentPage < pages.length - 1) {
-        switchPage(currentPage + 1);
-    } else if (clickX < windowWidth * 0.33 && currentPage > 0) {
-        switchPage(currentPage - 1);
+    // Если клик в правой части экрана
+    if (clickX > windowWidth - edgeThreshold && currentPage < pages.length - 1) {
+        createSwipeIndicator('left');
+        setTimeout(() => switchPage(currentPage + 1), 100);
+    } 
+    // Если клик в левой части экрана
+    else if (clickX < edgeThreshold && currentPage > 0) {
+        createSwipeIndicator('right');
+        setTimeout(() => switchPage(currentPage - 1), 100);
     }
 });
 
@@ -157,24 +275,47 @@ indicators.forEach((indicator, index) => {
 });
 
 // Рендеринг постов
-function renderPosts() {
+async function renderPosts() {
     const feed = document.getElementById('posts-feed');
     
-    postsData.forEach(post => {
+    for (const post of postsData) {
         const postElement = document.createElement('div');
         postElement.className = 'post';
+        
+        // Форматируем дату в Discord стиле
+        const dateText = getDiscordTimestamp(post.timestamp);
         
         let mediaHTML = '';
         if (post.media) {
             if (post.media.type === 'video') {
+                // Обычное видео файл
                 mediaHTML = `
-                    <div class="video-container">
-                        <video class="post-video" controls playsinline>
+                    <div class="video-container video-horizontal">
+                        <video class="post-video" controls playsinline muted>
                             <source src="${post.media.url}" type="video/mp4">
                             Ваш браузер не поддерживает видео.
                         </video>
                     </div>
                 `;
+            } else if (post.media.type === 'youtube') {
+                // YouTube видео
+                const videoId = getYouTubeVideoId(post.media.url);
+                if (videoId) {
+                    const isShort = isYouTubeShortsUrl(post.media.url);
+                    const containerClass = isShort ? 'video-container video-short' : 'video-container video-horizontal';
+                    
+                    mediaHTML = `
+                        <div class="${containerClass}">
+                            <iframe 
+                                class="youtube-embed"
+                                src="https://www.youtube.com/embed/${videoId}?autoplay=0&controls=1&modestbranding=1&rel=0"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    `;
+                }
             } else if (post.media.type === 'image') {
                 mediaHTML = `<img src="${post.media.url}" alt="Post image" class="post-image">`;
             }
@@ -182,10 +323,10 @@ function renderPosts() {
         
         postElement.innerHTML = `
             <div class="post-header">
-                <img src="${post.avatar}" alt="${post.author}" class="post-avatar">
+                <img src="${post.avatar}" alt="${post.author}" class="post-avatar" onerror="this.src='https://via.placeholder.com/48'">
                 <div>
                     <div class="post-author">${post.author}</div>
-                    <div class="post-date">${post.date}</div>
+                    <div class="post-date">${dateText}</div>
                 </div>
             </div>
             ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
@@ -193,7 +334,21 @@ function renderPosts() {
         `;
         
         feed.appendChild(postElement);
-    });
+        
+        // Добавляем обработчики для автоплея при наведении
+        const video = postElement.querySelector('.post-video');
+        if (video) {
+            postElement.addEventListener('mouseenter', () => {
+                video.play().catch(() => {
+                    // Игнорируем ошибки автоплея
+                });
+            });
+            
+            postElement.addEventListener('mouseleave', () => {
+                video.pause();
+            });
+        }
+    }
 }
 
 // Рендеринг ссылок
@@ -221,34 +376,9 @@ function renderLinks() {
     });
 }
 
-// Автопрокрутка видео при появлении в viewport (как в YouTube Shorts)
-const observerOptions = {
-    root: null,
-    rootMargin: '0px',
-    threshold: 0.5
-};
-
-const videoObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        const video = entry.target;
-        if (entry.isIntersecting) {
-            video.play().catch(() => {
-                // Игнорируем ошибки автоплея (браузерные ограничения)
-            });
-        } else {
-            video.pause();
-        }
-    });
-}, observerOptions);
-
 // Инициализация
-document.addEventListener('DOMContentLoaded', () => {
-    renderPosts();
+document.addEventListener('DOMContentLoaded', async () => {
+    await renderPosts();
     renderLinks();
-    
-    // Наблюдаем за видео для автоплея
-    document.querySelectorAll('.post-video').forEach(video => {
-        videoObserver.observe(video);
-    });
 });
 

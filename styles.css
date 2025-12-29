@@ -29,7 +29,7 @@ body {
     position: relative;
     width: 100%;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 /* Страницы */
@@ -43,6 +43,8 @@ body {
     transform: translateX(100%);
     transition: var(--transition);
     pointer-events: none;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .page.active {
@@ -60,6 +62,9 @@ body {
     max-width: 600px;
     margin: 0 auto;
     padding: 2rem 1rem;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .feed-header {
@@ -155,11 +160,21 @@ body {
     position: relative;
     width: 100%;
     background: #000;
-    aspect-ratio: 9 / 16;
-    max-height: 600px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.video-container.video-short {
+    aspect-ratio: 9 / 16;
+    max-height: 600px;
+}
+
+.video-container.video-horizontal {
+    aspect-ratio: 16 / 9;
+    max-height: 500px;
 }
 
 .video-container video {
@@ -168,11 +183,20 @@ body {
     object-fit: contain;
 }
 
+.youtube-embed {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 /* Страница ссылок */
 .links-container {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem 1rem;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .links-header {
@@ -322,5 +346,114 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
+}
+
+/* Индикаторы свайпа */
+.swipe-indicator {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.swipe-indicator.active {
+    opacity: 1;
+}
+
+.swipe-indicator.swipe-left {
+    right: 2rem;
+    animation: swipeLeft 0.5s ease;
+}
+
+.swipe-indicator.swipe-right {
+    left: 2rem;
+    animation: swipeRight 0.5s ease;
+}
+
+.swipe-indicator::before {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 60px;
+    border: 3px solid var(--accent-color);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+}
+
+.swipe-indicator.swipe-left::before {
+    border-right-color: transparent;
+    border-left-color: var(--accent-color);
+}
+
+.swipe-indicator.swipe-right::before {
+    border-left-color: transparent;
+    border-right-color: var(--accent-color);
+}
+
+@keyframes swipeLeft {
+    0% {
+        transform: translateY(-50%) translateX(0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-50%) translateX(-20px);
+        opacity: 0;
+    }
+}
+
+@keyframes swipeRight {
+    0% {
+        transform: translateY(-50%) translateX(0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-50%) translateX(20px);
+        opacity: 0;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Зоны для клика (визуальная подсказка при наведении) */
+.page.active::before,
+.page.active::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 10%;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.page.active::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
+}
+
+.page.active::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.05), transparent);
+}
+
+.page.active:hover::before,
+.page.active:hover::after {
+    opacity: 1;
 }
 
