@@ -140,6 +140,42 @@ body {
     word-wrap: break-word;
 }
 
+/* Поддержка форматирования текста в постах */
+.post-content * {
+    margin: 0;
+    padding: 0;
+}
+
+.post-content span[style] {
+    display: inline;
+}
+
+/* Анимированная надпись PEAK */
+.peak-label {
+    font-size: 3rem;
+    font-weight: 900;
+    text-align: center;
+    margin: 1.5rem 0;
+    letter-spacing: 0.1em;
+    background: linear-gradient(90deg, #ff6b00, #ff8c00, #ffaa00, #ffcc00, #ffaa00, #ff8c00, #ff6b00);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: flameGradient 3s ease-in-out infinite;
+    text-shadow: 0 0 20px rgba(255, 107, 0, 0.5);
+    line-height: 1.2;
+}
+
+@keyframes flameGradient {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
 .post-media {
     margin-top: 1rem;
     border-radius: 8px;
@@ -201,8 +237,10 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem 1rem;
-    padding-bottom: 6rem;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .links-header {
@@ -220,7 +258,9 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
-    padding-bottom: 4rem;
+    overflow: hidden;
+    flex: 1;
+    padding-bottom: 2rem;
 }
 
 .link-card {
@@ -435,31 +475,35 @@ html {
 }
 
 /* Зоны для клика (визуальная подсказка при наведении) */
-.page.active::before,
-.page.active::after {
-    content: '';
+.swipe-zone {
     position: fixed;
     top: 0;
     bottom: 0;
-    width: 10%;
+    width: 15%;
     z-index: 10;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
-.page.active::before {
+.swipe-zone-left {
     left: 0;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.05), transparent);
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.4), transparent);
 }
 
-.page.active::after {
+.swipe-zone-right {
     right: 0;
-    background: linear-gradient(to left, rgba(0, 0, 0, 0.05), transparent);
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.4), transparent);
 }
 
-.page.active:hover::before,
-.page.active:hover::after {
+/* Показываем зоны только когда активна страница ленты и при наведении */
+#feed-page.active ~ .swipe-zone-left,
+#feed-page.active ~ .swipe-zone-right {
+    opacity: 0;
+}
+
+.container:hover #feed-page.active ~ .swipe-zone-left,
+.container:hover #feed-page.active ~ .swipe-zone-right {
     opacity: 1;
 }
 

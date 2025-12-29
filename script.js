@@ -92,7 +92,9 @@ const postsData = [
         author: "Angel",
         avatar: null, // Будет заменено на загруженный аватар
         timestamp: Date.now() - 2 * 60 * 60 * 1000, // 2 часа назад
-        content: "Привет! Это мой первый пост в ленте. Здесь можно делиться мыслями, видео и фотографиями.",
+        content: `Привет! Это мой первый пост в ленте. Здесь можно делиться мыслями, видео и фотографиями.<br><br>
+        <span style="color: #ff6b00; font-weight: bold;">Цветной текст</span> и 
+        <span style="background: linear-gradient(90deg, #ff6b00, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;">градиентный текст</span>!`,
         media: {
             type: "image",
             url: "https://via.placeholder.com/600x400"
@@ -103,7 +105,7 @@ const postsData = [
         author: "Angel",
         avatar: null,
         timestamp: Date.now() - 5 * 60 * 60 * 1000, // 5 часов назад
-        content: "Поддержка видео в стиле YouTube Shorts! 🎬",
+        content: '<div class="peak-label">PEAK</div>',
         media: {
             type: "youtube",
             url: "https://www.youtube.com/shorts/2LldM4Fwtas"
@@ -114,7 +116,10 @@ const postsData = [
         author: "Angel",
         avatar: null,
         timestamp: Date.now() - 24 * 60 * 60 * 1000, // 1 день назад
-        content: "Минималистичный дизайн в духе Vastlyra. Простота и элегантность."
+        content: `Минималистичный дизайн в духе Vastlyra. Простота и элегантность.<br><br>
+        <span style="color: #0066ff;">Синий текст</span>, 
+        <span style="color: #00cc66;">зеленый текст</span>, 
+        <span style="background: linear-gradient(45deg, #ff0066, #6600ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;">радужный градиент</span>!`
     },
     {
         id: 4,
@@ -200,6 +205,12 @@ function switchPage(index) {
     
     pages[currentPage].classList.add('active');
     indicators[currentPage].classList.add('active');
+    
+    // Скрываем зоны при переключении страниц
+    if (swipeZoneLeft && swipeZoneRight) {
+        swipeZoneLeft.style.opacity = '0';
+        swipeZoneRight.style.opacity = '0';
+    }
 }
 
 // Свайп навигация
@@ -262,6 +273,47 @@ function createSwipeIndicator(direction) {
         }, 300);
     }, 500);
 }
+
+// Управление зонами затемнения
+const swipeZoneLeft = document.querySelector('.swipe-zone-left');
+const swipeZoneRight = document.querySelector('.swipe-zone-right');
+
+function updateSwipeZones(mouseX) {
+    if (currentPage !== 0) {
+        // На странице MyLinks скрываем зоны
+        swipeZoneLeft.style.opacity = '0';
+        swipeZoneRight.style.opacity = '0';
+        return;
+    }
+    
+    const windowWidth = window.innerWidth;
+    const edgeThreshold = windowWidth * 0.15; // 15% от края
+    
+    // Показываем левую зону при наведении на левый край
+    if (mouseX < edgeThreshold && currentPage > 0) {
+        swipeZoneLeft.style.opacity = '1';
+    } else {
+        swipeZoneLeft.style.opacity = '0';
+    }
+    
+    // Показываем правую зону при наведении на правый край
+    if (mouseX > windowWidth - edgeThreshold && currentPage < pages.length - 1) {
+        swipeZoneRight.style.opacity = '1';
+    } else {
+        swipeZoneRight.style.opacity = '0';
+    }
+}
+
+// Отслеживание движения мыши
+document.addEventListener('mousemove', (e) => {
+    updateSwipeZones(e.clientX);
+});
+
+// Скрываем зоны при уходе мыши
+document.addEventListener('mouseleave', () => {
+    swipeZoneLeft.style.opacity = '0';
+    swipeZoneRight.style.opacity = '0';
+});
 
 // Клик на правую/левую часть экрана для переключения
 document.addEventListener('click', (e) => {
@@ -411,5 +463,11 @@ function renderLinks() {
 document.addEventListener('DOMContentLoaded', async () => {
     await renderPosts();
     renderLinks();
+    
+    // Инициализируем зоны затемнения
+    if (swipeZoneLeft && swipeZoneRight) {
+        swipeZoneLeft.style.opacity = '0';
+        swipeZoneRight.style.opacity = '0';
+    }
 });
 
